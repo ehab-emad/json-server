@@ -1,4 +1,3 @@
-
 const jsonServer = require('json-server');
 const server = jsonServer.create();
 const router = jsonServer.router('db.json');
@@ -11,7 +10,7 @@ const port = process.env.PORT || 30001;
 // إعداد Multer لتخزين الملفات
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/');
+    cb(null, 'public/images');
   },
   filename: function (req, file, cb) {
     const fileExtension = path.extname(file.originalname);
@@ -35,10 +34,10 @@ server.post('/products', upload.single('image'), (req, res, next) => {
   next();
 });
 
-// استخدام Middlewares
+// إعداد Middlewares
 server.use(middlewares);
 
-// استخدام Router
+// إعداد Router
 server.use(router);
 
 // بدء تشغيل الخادم
