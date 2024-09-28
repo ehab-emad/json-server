@@ -1,11 +1,6 @@
 {
     "allcatogray": [
-      {
-        "id": 1,
-        "quantity": 0,
-        "category": " مكملات كرياتين",
-        "images": "images/re.webp"
-      },
+      
       {
         "id": 2,
         "category": " مكملات  بروتين",
