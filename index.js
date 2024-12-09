@@ -17,18 +17,6 @@ const client = new Client({
     database: process.env.DB_NAME, // اسم قاعدة البيانات من متغيرات البيئة
     port: process.env.DB_PORT || 5432, // المنفذ الافتراضي لـ PostgreSQL
 });
-// مسار لحذف كل المنتجات من قاعدة البيانات
-app.delete('/products', (req, res) => {
-    const sql = 'DELETE FROM products';
-
-    client.query(sql, (err, result) => {
-        if (err) {
-            console.error('Error deleting products:', err);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        res.status(200).json({ message: 'All products have been deleted successfully' });
-    });
-});
 
 client.connect(err => {
     if (err) {
