@@ -3,13 +3,13 @@ const multer = require('multer');
 const path = require('path');
 const { Client } = require('pg'); // مكتبة PostgreSQL
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config(); // تحميل المتغيرات البيئية
 
 // إنشاء التطبيق
 const app = express();
 const port = process.env.PORT || 3000;
-
 // إعداد اتصال قاعدة البيانات PostgreSQL
 const client = new Client({
     host: process.env.DB_HOST,
@@ -229,7 +229,10 @@ app.put('/categories/:id', upload.single('image'), (req, res) => {
         res.status(200).json(result.rows[0]);
     });
 });
+app.use(cors());
 
+app.use(middlewares);
+app.use(router);
 // بدء تشغيل الخادم
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
