@@ -39,7 +39,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const fileName = `${Date.now()}-${file.originalname}`; // اسم فريد للملف
-        req.body.image = `http://localhost:${port}/public/images/${fileName}`; // تخزين الرابط الكامل للصورة
+        req.body.image = `${fileName}`; // تخزين الرابط الكامل للصورة
         cb(null, fileName);
     }
 });
