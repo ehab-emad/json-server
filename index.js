@@ -125,7 +125,14 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
         WHERE id = $5
         RETURNING *`;
     const values = [title, description, price, image, id];
-
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting product:', err); // عرض التفاصيل الكاملة للخطأ
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        res.status(201).json({ id: result.rows[0].id, ...req.body });
+    });
+    
     client.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error updating product:', err);
