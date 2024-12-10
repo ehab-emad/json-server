@@ -77,7 +77,7 @@ app.post('/products', upload.single('image'), (req, res) => {
     });
 });
 app.post('/categories', upload.single('image'), (req, res) => {
-    const { title, price,  category } = req.body;
+    const { price,  category } = req.body;
     const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
 
     // التحقق من الحقول المطلوبة
@@ -86,11 +86,11 @@ app.post('/categories', upload.single('image'), (req, res) => {
     }
 
     const sql = `
-        INSERT INTO categories (title, category, images)
+        INSERT INTO categories ( category, images)
         VALUES ($1, $2, $3)
         RETURNING id
     `;
-    const values = [title, category, image];
+    const values = [category, image];
 
     client.query(sql, values, (err, result) => {
         if (err) {
