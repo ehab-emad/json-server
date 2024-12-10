@@ -52,28 +52,30 @@ app.use('/public', express.static(path.join(__dirname, 'public'))); // استض�
  * إضافة منتج جديد
  * @route POST /products
  */
-app.post('/products', upload.single('image'), (req, res) => {
-    const { title, description, price } = req.body; // استخراج البيانات من الطلب
-    const image = req.body.image; // مسار الصورة
+app.post('/products', (req, res) => {
+    const { title, price, scope, category, fame, num, description, images } = req.body;
 
-    // التحقق من الحقول الإلزامية
+    // التحقق من القيم المطلوبة
     if (!title || !price) {
-        return res.status(400).json({ error: 'Name and price are required' });
+        return res.status(400).json({ error: 'Title and price are required' });
     }
 
-    // الاستعلام لإضافة المنتج
-    const sql = 'INSERT INTO products (name, description, price, image) VALUES ($1, $2, $3, $4) RETURNING id';
-    const values = [title, description, price, image];
+    const sql = `
+        INSERT INTO products (title, price, scope, category, fame, num, description, images)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+    `;
+    const values = [title, price, scope, category, fame, num, description, images];
 
     client.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error inserting product:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: 'Database error', details: err.message });
         }
-        // إرسال استجابة بالمنتج المضاف
         res.status(201).json({ id: result.rows[0].id, ...req.body });
     });
 });
+
 
 /**
  * جلب كل المنتجات
