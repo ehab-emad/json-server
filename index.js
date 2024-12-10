@@ -53,17 +53,17 @@ app.use('/public', express.static(path.join(__dirname, 'public'))); // استض�
  * @route POST /products
  */
 app.post('/products', upload.single('image'), (req, res) => {
-    const { name, description, price } = req.body; // استخراج البيانات من الطلب
+    const { title, description, price } = req.body; // استخراج البيانات من الطلب
     const image = req.body.image; // مسار الصورة
 
     // التحقق من الحقول الإلزامية
-    if (!name || !price) {
+    if (!title || !price) {
         return res.status(400).json({ error: 'Name and price are required' });
     }
 
     // الاستعلام لإضافة المنتج
     const sql = 'INSERT INTO products (name, description, price, image) VALUES ($1, $2, $3, $4) RETURNING id';
-    const values = [name, description, price, image];
+    const values = [title, description, price, image];
 
     client.query(sql, values, (err, result) => {
         if (err) {
@@ -116,15 +116,15 @@ app.delete('/products/:id', (req, res) => {
  */
 app.put('/products/:id', upload.single('image'), (req, res) => {
     const { id } = req.params; // استخراج المعرف
-    const { name, description, price } = req.body; // استخراج البيانات
+    const { title, description, price } = req.body; // استخراج البيانات
     const image = req.body.image;
 
     const sql = `
         UPDATE products
-        SET name = $1, description = $2, price = $3, image = $4
+        SET title = $1, description = $2, price = $3, image = $4
         WHERE id = $5
         RETURNING *`;
-    const values = [name, description, price, image, id];
+    const values = [title, description, price, image, id];
 
     client.query(sql, values, (err, result) => {
         if (err) {
