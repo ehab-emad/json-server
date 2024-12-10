@@ -39,7 +39,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const fileName = `${Date.now()}-${file.originalname}`; // اسم فريد للملف
-        req.body.image = `images/${fileName}`; // تخزين مسار الصورة
+        req.body.image = `http://localhost:${port}/public/images/${fileName}`; // تخزين الرابط الكامل للصورة
         cb(null, fileName);
     }
 });
@@ -56,7 +56,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
  */
 app.post('/products', upload.single('image'), (req, res) => {
     const { title, price, scope, category, fame, num, description } = req.body;
-    const image = req.file ? `images/${req.file.filename}` : null;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة
 
     if (!title || !price) {
         return res.status(400).json({ error: 'Title and price are required' });
@@ -83,7 +83,7 @@ app.post('/products', upload.single('image'), (req, res) => {
  */
 app.post('/categories', upload.single('image'), (req, res) => {
     const { category } = req.body;
-    const image = req.file ? `images/${req.file.filename}` : null;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة
 
     if (!category) {
         return res.status(400).json({ error: 'Category is required' });
@@ -175,7 +175,7 @@ app.delete('/categories/:id', (req, res) => {
 app.put('/products/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { title, description, price } = req.body;
-    const image = req.file ? `images/${req.file.filename}` : null;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة
 
     const sql = `
         UPDATE products
@@ -203,7 +203,7 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
 app.put('/categories/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { category } = req.body;
-    const image = req.file ? `images/${req.file.filename}` : null;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة
 
     const sql = `
         UPDATE categories
