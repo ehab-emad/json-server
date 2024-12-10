@@ -52,10 +52,11 @@ app.use('/public', express.static(path.join(__dirname, 'public'))); // استض�
  * إضافة منتج جديد
  * @route POST /products
  */
-app.post('/products', (req, res) => {
-    const { title, price, scope, category, fame, num, description, images } = req.body;
+app.post('/products', upload.single('image'), (req, res) => {
+    const { title, price, scope, category, fame, num, description } = req.body;
+    const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
 
-    // التحقق من القيم المطلوبة
+    // التحقق من الحقول المطلوبة
     if (!title || !price) {
         return res.status(400).json({ error: 'Title and price are required' });
     }
@@ -65,11 +66,11 @@ app.post('/products', (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
     `;
-    const values = [title, price, scope, category, fame, num, description, images];
+    const values = [title, price, scope, category, fame, num, description, image];
 
     client.query(sql, values, (err, result) => {
         if (err) {
-            console.error('Error inserting product:', err);
+            console.error('Error inserting product:', err); // طباعة التفاصيل هنا
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
         res.status(201).json({ id: result.rows[0].id, ...req.body });
