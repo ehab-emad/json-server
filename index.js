@@ -76,17 +76,17 @@ app.post('/products', upload.single('image'), (req, res) => {
         res.status(201).json({ id: result.rows[0].id, ...req.body });
     });
 });
-app.post('/category', upload.single('image'), (req, res) => {
-    const {  category } = req.body;
+app.post('/categories', upload.single('image'), (req, res) => {
+    const { category } = req.body; // تأكد من أن هذه الحقول موجودة في الطلب
     const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
 
     // التحقق من الحقول المطلوبة
-    if (category) {
-        return res.status(400).json({ error: 'category are required' });
+    if (!category) {
+        return res.status(400).json({ error: 'Category is required' });
     }
 
     const sql = `
-        INSERT INTO categories ( category, images)
+        INSERT INTO categories (category, images)
         VALUES ($1, $2)
         RETURNING id
     `;
@@ -94,12 +94,13 @@ app.post('/category', upload.single('image'), (req, res) => {
 
     client.query(sql, values, (err, result) => {
         if (err) {
-            console.error('Error inserting categories:', err); // طباعة التفاصيل هنا
+            console.error('Error inserting category:', err); // طباعة التفاصيل هنا
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
         res.status(201).json({ id: result.rows[0].id, ...req.body });
     });
 });
+
 
 
 /**
