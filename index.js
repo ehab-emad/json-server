@@ -12,11 +12,11 @@ const port = process.env.PORT || 3000;
 
 // إعداد اتصال قاعدة البيانات PostgreSQL
 const client = new Client({
-    host: process.env.DB_HOST, // عنوان السيرفر
-    user: process.env.DB_USER, // اسم المستخدم
-    password: process.env.DB_PASSWORD, // كلمة المرور
-    database: process.env.DB_NAME, // اسم قاعدة البيانات
-    port: process.env.DB_PORT || 3000, // المنفذ
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 5432, // منفذ PostgreSQL الافتراضي
 });
 
 // التحقق من اتصال قاعدة البيانات
@@ -33,30 +33,29 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const dir = 'public/images'; // المجلد الخاص بحفظ الصور
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // إنشاء المجلد إذا لم يكن موجودًا
-        cb(null, dir); // حفظ الملفات في المجلد المحدد
+        cb(null, dir);
     },
     filename: function (req, file, cb) {
-        const fileName = `${Date.now()}-${file.originalname}`; // تعيين اسم مميز للملف
-        req.body.image = `images/${fileName}`; // تخزين المسار داخل الطلب
-        cb(null, fileName); // تعيين الاسم النهائي
+        const fileName = `${Date.now()}-${file.originalname}`; // اسم فريد للملف
+        req.body.image = `images/${fileName}`; // تخزين مسار الصورة
+        cb(null, fileName);
     }
 });
 
 const upload = multer({ storage: storage });
 
 // Middleware
-app.use(bodyParser.json()); // قراءة بيانات JSON في الطلبات
-app.use('/public', express.static(path.join(__dirname, 'public'))); // استضافة الملفات العامة
+app.use(bodyParser.json());
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
-/**
- * إضافة منتج جديد
+/** 
+ * 1. إضافة منتج جديد
  * @route POST /products
  */
 app.post('/products', upload.single('image'), (req, res) => {
     const { title, price, scope, category, fame, num, description } = req.body;
-    const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
+    const image = req.file ? `images/${req.file.filename}` : null;
 
-    // التحقق من الحقول المطلوبة
     if (!title || !price) {
         return res.status(400).json({ error: 'Title and price are required' });
     }
@@ -70,17 +69,21 @@ app.post('/products', upload.single('image'), (req, res) => {
 
     client.query(sql, values, (err, result) => {
         if (err) {
-            console.error('Error inserting product:', err); // طباعة التفاصيل هنا
+            console.error('Error inserting product:', err);
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
-        res.status(201).json({ id: result.rows[0].id, ...req.body });
+        res.status(201).json({ id: result.rows[0].id, ...req.body, image });
     });
 });
-app.post('/categories', upload.single('image'), (req, res) => {
-    const { category } = req.body; // تأكد من أن هذه الحقول موجودة في الطلب
-    const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
 
-    // التحقق من الحقول المطلوبة
+/** 
+ * 2. إضافة تصنيف جديد
+ * @route POST /categories
+ */
+app.post('/categories', upload.single('image'), (req, res) => {
+    const { category } = req.body;
+    const image = req.file ? `images/${req.file.filename}` : null;
+
     if (!category) {
         return res.status(400).json({ error: 'Category is required' });
     }
@@ -94,17 +97,15 @@ app.post('/categories', upload.single('image'), (req, res) => {
 
     client.query(sql, values, (err, result) => {
         if (err) {
-            console.error('Error inserting category:', err); // طباعة التفاصيل هنا
+            console.error('Error inserting category:', err);
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
-        res.status(201).json({ id: result.rows[0].id, ...req.body });
+        res.status(201).json({ id: result.rows[0].id, category, image });
     });
 });
 
-
-
 /**
- * جلب كل المنتجات
+ * 3. جلب كل المنتجات
  * @route GET /products
  */
 app.get('/products', (req, res) => {
@@ -114,10 +115,14 @@ app.get('/products', (req, res) => {
             console.error('Error fetching products:', err);
             return res.status(500).json({ error: 'Database error' });
         }
-        // إرسال قائمة المنتجات
         res.status(200).json(results.rows);
     });
 });
+
+/**
+ * 4. جلب كل التصنيفات
+ * @route GET /categories
+ */
 app.get('/categories', (req, res) => {
     const sql = 'SELECT * FROM categories';
     client.query(sql, (err, results) => {
@@ -125,17 +130,16 @@ app.get('/categories', (req, res) => {
             console.error('Error fetching categories:', err);
             return res.status(500).json({ error: 'Database error' });
         }
-        // إرسال قائمة المنتجات
         res.status(200).json(results.rows);
     });
 });
 
 /**
- * حذف منتج معين
+ * 5. حذف منتج
  * @route DELETE /products/:id
  */
 app.delete('/products/:id', (req, res) => {
-    const { id } = req.params; // استخراج المعرف من الطلب
+    const { id } = req.params;
     const sql = 'DELETE FROM products WHERE id = $1';
     client.query(sql, [id], (err, result) => {
         if (err) {
@@ -148,48 +152,47 @@ app.delete('/products/:id', (req, res) => {
         res.status(200).json({ message: 'Product deleted successfully' });
     });
 });
+
+/**
+ * 6. حذف تصنيف
+ * @route DELETE /categories/:id
+ */
 app.delete('/categories/:id', (req, res) => {
-    const { id } = req.params; // استخراج المعرف من الطلب
+    const { id } = req.params;
     const sql = 'DELETE FROM categories WHERE id = $1';
     client.query(sql, [id], (err, result) => {
         if (err) {
-            console.error('Error deleting categories:', err);
+            console.error('Error deleting category:', err);
             return res.status(500).json({ error: 'Database error' });
         }
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'category not found' });
+            return res.status(404).json({ error: 'Category not found' });
         }
-        res.status(200).json({ message: 'categoru deleted successfully' });
+        res.status(200).json({ message: 'Category deleted successfully' });
     });
 });
 
 /**
- * تعديل منتج معين
+ * 7. تحديث منتج
  * @route PUT /products/:id
  */
 app.put('/products/:id', upload.single('image'), (req, res) => {
-    const { id } = req.params; // استخراج المعرف
-    const { title, description, price } = req.body; // استخراج البيانات
-    const image = req.body.image;
+    const { id } = req.params;
+    const { title, description, price } = req.body;
+    const image = req.file ? `images/${req.file.filename}` : null;
 
     const sql = `
         UPDATE products
-        SET title = $1, description = $2, price = $3, image = $4
+        SET title = $1, description = $2, price = $3, images = $4
         WHERE id = $5
-        RETURNING *`;
+        RETURNING *
+    `;
     const values = [title, description, price, image, id];
-    client.query(sql, values, (err, result) => {
-        if (err) {
-            console.error('Error inserting product:', err); // عرض التفاصيل الكاملة للخطأ
-            return res.status(500).json({ error: 'Database error', details: err.message });
-        }
-        res.status(201).json({ id: result.rows[0].id, ...req.body });
-    });
-    
+
     client.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error updating product:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: 'Database error', details: err.message });
         }
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Product not found' });
@@ -197,32 +200,31 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
         res.status(200).json(result.rows[0]);
     });
 });
+
+/**
+ * 8. تحديث تصنيف
+ * @route PUT /categories/:id
+ */
 app.put('/categories/:id', upload.single('image'), (req, res) => {
-    const { id } = req.params; // استخراج المعرف
-    const { title, description, price } = req.body; // استخراج البيانات
-    const image = req.body.image;
+    const { id } = req.params;
+    const { category } = req.body;
+    const image = req.file ? `images/${req.file.filename}` : null;
 
     const sql = `
         UPDATE categories
-        SET title = $1, category=$3,  image = $4
-        WHERE id = $5
-        RETURNING *`;
-    const values = [title,category,image, id];
-    client.query(sql, values, (err, result) => {
-        if (err) {
-            console.error('Error inserting categories:', err); // عرض التفاصيل الكاملة للخطأ
-            return res.status(500).json({ error: 'Database error', details: err.message });
-        }
-        res.status(201).json({ id: result.rows[0].id, ...req.body });
-    });
-    
+        SET category = $1, images = $2
+        WHERE id = $3
+        RETURNING *
+    `;
+    const values = [category, image, id];
+
     client.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error updating category:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: 'Database error', details: err.message });
         }
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'category not found' });
+            return res.status(404).json({ error: 'Category not found' });
         }
         res.status(200).json(result.rows[0]);
     });
