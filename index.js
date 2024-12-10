@@ -76,6 +76,30 @@ app.post('/products', upload.single('image'), (req, res) => {
         res.status(201).json({ id: result.rows[0].id, ...req.body });
     });
 });
+app.post('/categories', upload.single('image'), (req, res) => {
+    const { title, price, scope, category, fame, num, description } = req.body;
+    const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
+
+    // التحقق من الحقول المطلوبة
+    if (!title || !price) {
+        return res.status(400).json({ error: 'Title and price are required' });
+    }
+
+    const sql = `
+        INSERT INTO products (title, category, images)
+        VALUES ($1, $2, $3)
+        RETURNING id
+    `;
+    const values = [title, category, image];
+
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting categories:', err); // طباعة التفاصيل هنا
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        res.status(201).json({ id: result.rows[0].id, ...req.body });
+    });
+});
 
 
 /**
@@ -87,6 +111,17 @@ app.get('/products', (req, res) => {
     client.query(sql, (err, results) => {
         if (err) {
             console.error('Error fetching products:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        // إرسال قائمة المنتجات
+        res.status(200).json(results.rows);
+    });
+});
+app.get('/categories', (req, res) => {
+    const sql = 'SELECT * FROM categories';
+    client.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching categories:', err);
             return res.status(500).json({ error: 'Database error' });
         }
         // إرسال قائمة المنتجات
@@ -110,6 +145,20 @@ app.delete('/products/:id', (req, res) => {
             return res.status(404).json({ error: 'Product not found' });
         }
         res.status(200).json({ message: 'Product deleted successfully' });
+    });
+});
+app.delete('/categories/:id', (req, res) => {
+    const { id } = req.params; // استخراج المعرف من الطلب
+    const sql = 'DELETE FROM categories WHERE id = $1';
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting categories:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'category not found' });
+        }
+        res.status(200).json({ message: 'categoru deleted successfully' });
     });
 });
 
@@ -143,6 +192,36 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
         }
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+app.put('/categories/:id', upload.single('image'), (req, res) => {
+    const { id } = req.params; // استخراج المعرف
+    const { title, description, price } = req.body; // استخراج البيانات
+    const image = req.body.image;
+
+    const sql = `
+        UPDATE categories
+        SET title = $1, category=$3,  image = $4
+        WHERE id = $5
+        RETURNING *`;
+    const values = [title,category,image, id];
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting categories:', err); // عرض التفاصيل الكاملة للخطأ
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        res.status(201).json({ id: result.rows[0].id, ...req.body });
+    });
+    
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error updating category:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'category not found' });
         }
         res.status(200).json(result.rows[0]);
     });
