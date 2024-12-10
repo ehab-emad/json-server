@@ -5,13 +5,13 @@ const { Client } = require('pg'); // مكتبة PostgreSQL
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
-const middlewares = jsonServer.defaults();
 
 require('dotenv').config(); // تحميل المتغيرات البيئية
 
 // إنشاء التطبيق
 const app = express();
 const port = process.env.PORT || 3000;
+
 // إعداد اتصال قاعدة البيانات PostgreSQL
 const client = new Client({
     host: process.env.DB_HOST,
@@ -47,12 +47,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 /** 
  * 1. إضافة منتج جديد
- * @route POST /products
  */
 app.post('/products', upload.single('image'), (req, res) => {
     const { title, price, scope, category, fame, num, description } = req.body;
@@ -80,7 +80,6 @@ app.post('/products', upload.single('image'), (req, res) => {
 
 /** 
  * 2. إضافة تصنيف جديد
- * @route POST /categories
  */
 app.post('/categories', upload.single('image'), (req, res) => {
     const { category } = req.body;
@@ -108,7 +107,6 @@ app.post('/categories', upload.single('image'), (req, res) => {
 
 /**
  * 3. جلب كل المنتجات
- * @route GET /products
  */
 app.get('/products', (req, res) => {
     const sql = 'SELECT * FROM products';
@@ -123,7 +121,6 @@ app.get('/products', (req, res) => {
 
 /**
  * 4. جلب كل التصنيفات
- * @route GET /categories
  */
 app.get('/categories', (req, res) => {
     const sql = 'SELECT * FROM categories';
@@ -138,7 +135,6 @@ app.get('/categories', (req, res) => {
 
 /**
  * 5. حذف منتج
- * @route DELETE /products/:id
  */
 app.delete('/products/:id', (req, res) => {
     const { id } = req.params;
@@ -157,7 +153,6 @@ app.delete('/products/:id', (req, res) => {
 
 /**
  * 6. حذف تصنيف
- * @route DELETE /categories/:id
  */
 app.delete('/categories/:id', (req, res) => {
     const { id } = req.params;
@@ -176,7 +171,6 @@ app.delete('/categories/:id', (req, res) => {
 
 /**
  * 7. تحديث منتج
- * @route PUT /products/:id
  */
 app.put('/products/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
@@ -205,7 +199,6 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
 
 /**
  * 8. تحديث تصنيف
- * @route PUT /categories/:id
  */
 app.put('/categories/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
@@ -231,10 +224,7 @@ app.put('/categories/:id', upload.single('image'), (req, res) => {
         res.status(200).json(result.rows[0]);
     });
 });
-app.use(cors());
 
-app.use(middlewares);
-app.use(router);
 // بدء تشغيل الخادم
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
