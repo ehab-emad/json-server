@@ -76,18 +76,18 @@ app.post('/products', upload.single('image'), (req, res) => {
         res.status(201).json({ id: result.rows[0].id, ...req.body });
     });
 });
-app.post('/categories', upload.single('image'), (req, res) => {
-    const { price,  category } = req.body;
+app.post('/category', upload.single('image'), (req, res) => {
+    const {  category } = req.body;
     const image = req.file ? req.file.filename : null; // استخدام اسم الملف المحفوظ
 
     // التحقق من الحقول المطلوبة
-    if (!title || !price) {
-        return res.status(400).json({ error: 'Title and price are required' });
+    if (category) {
+        return res.status(400).json({ error: 'category are required' });
     }
 
     const sql = `
         INSERT INTO categories ( category, images)
-        VALUES ($1, $2, $3)
+        VALUES ($1, $2)
         RETURNING id
     `;
     const values = [category, image];
