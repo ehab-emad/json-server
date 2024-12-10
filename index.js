@@ -5,6 +5,8 @@ const { Client } = require('pg'); // مكتبة PostgreSQL
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
+const middlewares = jsonServer.defaults();
+
 require('dotenv').config(); // تحميل المتغيرات البيئية
 
 // إنشاء التطبيق
