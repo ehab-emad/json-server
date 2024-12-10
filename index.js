@@ -16,7 +16,7 @@ const client = new Client({
     user: process.env.DB_USER, // اسم المستخدم
     password: process.env.DB_PASSWORD, // كلمة المرور
     database: process.env.DB_NAME, // اسم قاعدة البيانات
-    port: process.env.DB_PORT || 5432, // المنفذ
+    port: process.env.DB_PORT || 3000, // المنفذ
 });
 
 // التحقق من اتصال قاعدة البيانات
