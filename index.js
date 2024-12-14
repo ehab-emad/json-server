@@ -8,17 +8,14 @@ const fs = require('fs');
 
 require('dotenv').config(); // تحميل المتغيرات البيئية
 
+
 // إنشاء التطبيق
 const app = express();
 const port = process.env.PORT || 3000;
 
 // إعداد اتصال قاعدة البيانات PostgreSQL
 const client = new Client({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 5432, // منفذ PostgreSQL الافتراضي
+    connectionString: process.env.DATABASE_URL, // استخدام الرابط من المتغيرات البيئية
 });
 
 // التحقق من اتصال قاعدة البيانات
