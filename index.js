@@ -30,7 +30,7 @@ client.connect(err => {
 // إعداد Multer لتخزين الملفات المرفوعة
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = 'public/images'; // المجلد الخاص بحفظ الصور
+        const dir = 'images'; // المجلد الخاص بحفظ الصور
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // إنشاء المجلد إذا لم يكن موجودًا
         cb(null, dir);
     },
