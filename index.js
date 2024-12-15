@@ -197,6 +197,108 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
 /**
  * 8. تحديث تصنيف
  */
+
+/**
+ * 9. تحديث منتج جزئي
+ */
+app.patch('/products/:id', upload.single('image'), (req, res) => {
+    const { id } = req.params;
+    const { title, description, price, scope, category, fame, num } = req.body;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة إذا تم تحميل صورة جديدة
+
+    // بناء جملة SQL ديناميكية بناءً على البيانات المدخلة
+    let updateQuery = 'UPDATE products SET';
+    let values = [];
+    let counter = 1;
+
+    if (title) {
+        updateQuery += ` title = $${counter++},`;
+        values.push(title);
+    }
+    if (description) {
+        updateQuery += ` description = $${counter++},`;
+        values.push(description);
+    }
+    if (price) {
+        updateQuery += ` price = $${counter++},`;
+        values.push(price);
+    }
+    if (scope) {
+        updateQuery += ` scope = $${counter++},`;
+        values.push(scope);
+    }
+    if (category) {
+        updateQuery += ` category = $${counter++},`;
+        values.push(category);
+    }
+    if (fame) {
+        updateQuery += ` fame = $${counter++},`;
+        values.push(fame);
+    }
+    if (num) {
+        updateQuery += ` num = $${counter++},`;
+        values.push(num);
+    }
+    if (image) {
+        updateQuery += ` images = $${counter++},`;
+        values.push(image);
+    }
+
+    // إزالة الفاصلة الزائدة في النهاية
+    updateQuery = updateQuery.slice(0, -1);
+    updateQuery += ` WHERE id = $${counter}`;
+    values.push(id);
+
+    client.query(updateQuery, values, (err, result) => {
+        if (err) {
+            console.error('Error updating product:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+/**
+ * 10. تحديث تصنيف جزئي
+ */
+app.patch('/categories/:id', upload.single('image'), (req, res) => {
+    const { id } = req.params;
+    const { category } = req.body;
+    const image = req.body.image; // استخدام الرابط الكامل للصورة إذا تم تحميل صورة جديدة
+
+    // بناء جملة SQL ديناميكية بناءً على البيانات المدخلة
+    let updateQuery = 'UPDATE categories SET';
+    let values = [];
+    let counter = 1;
+
+    if (category) {
+        updateQuery += ` category = $${counter++},`;
+        values.push(category);
+    }
+    if (image) {
+        updateQuery += ` images = $${counter++},`;
+        values.push(image);
+    }
+
+    // إزالة الفاصلة الزائدة في النهاية
+    updateQuery = updateQuery.slice(0, -1);
+    updateQuery += ` WHERE id = $${counter}`;
+    values.push(id);
+
+    client.query(updateQuery, values, (err, result) => {
+        if (err) {
+            console.error('Error updating category:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+
 app.put('/categories/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { category } = req.body;
