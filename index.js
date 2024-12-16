@@ -201,6 +201,43 @@ app.put('/products/:id', upload.single('image'), (req, res) => {
 /**
  * 9. تحديث منتج جزئي
  */
+/**
+ * 11. جلب منتج بالـ ID
+ */
+app.get('/products/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+    const sql = 'SELECT * FROM products WHERE id = $1';
+    
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching product by ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+/**
+ * 12. جلب تصنيف بالـ ID
+ */
+app.get('/categories/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+    const sql = 'SELECT * FROM categories WHERE id = $1';
+    
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching category by ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+
 app.patch('/products/:id', upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { title, description, price, scope, category, fame, num } = req.body;
