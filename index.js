@@ -52,7 +52,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
  * 1. إضافة منتج جديد
  */
 // إضافة طالب جديد
-app.post('/orders', (req, res) => {
+app.post('/orders', upload.none(), (req, res) => {
     const { name, location, phonenumber, email, additional_data } = req.body;
 
     // التحقق من البيانات المطلوبة
@@ -67,7 +67,13 @@ app.post('/orders', (req, res) => {
         RETURNING id
     `;
 
-    const values = [name, location, phonenumber || null, email, additional_data || null];
+    const values = [
+        name,
+        location,
+        phonenumber || null,
+        email,
+        additional_data || null,
+    ];
 
     client.query(sql, values, (err, result) => {
         if (err) {
@@ -75,7 +81,7 @@ app.post('/orders', (req, res) => {
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
 
-        // إرجاع المعرف الجديد للطالب
+        // إرجاع المعرف الجديد
         res.status(201).json({ id: result.rows[0].id, name, location, phonenumber, email, additional_data });
     });
 });
