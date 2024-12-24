@@ -128,7 +128,6 @@ app.delete('/orders/:id', (req, res) => {
         res.status(200).json({ message: 'Order deleted successfully' });
     });
 });
-const multer = require('multer');
 
 app.post('/orders', upload.none(), (req, res) => {
     const { name, location, phonenumber, email, additional_data } = req.body;
