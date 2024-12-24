@@ -51,6 +51,35 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 /** 
  * 1. إضافة منتج جديد
  */
+// إضافة طالب جديد
+app.post('/orders', (req, res) => {
+    const { name, location, phonenumber, email, additional_data } = req.body;
+
+    // التحقق من البيانات المطلوبة
+    if (!name || !location || !email) {
+        return res.status(400).json({ error: 'Name, location, and email are required' });
+    }
+
+    // استعلام SQL لإدخال البيانات
+    const sql = `
+        INSERT INTO orders (name, location, phonenumber, email, additional_data)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+    `;
+
+    const values = [name, location, phonenumber || null, email, additional_data || null];
+
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting orders:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+
+        // إرجاع المعرف الجديد للطالب
+        res.status(201).json({ id: result.rows[0].id, name, location, phonenumber, email, additional_data });
+    });
+});
+
 app.post('/products', upload.single('image'), (req, res) => {
     const { title, price, scope, category, fame, num, description } = req.body;
     const image = req.body.image; // استخدام الرابط الكامل للصورة
@@ -115,6 +144,16 @@ app.get('/products', (req, res) => {
         res.status(200).json(results.rows);
     });
 });
+app.get('/orders', (req, res) => {
+    const sql = 'SELECT * FROM orders';
+    client.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching orders:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.status(200).json(results.rows);
+    });
+});
 
 /**
  * 4. جلب كل التصنيفات
@@ -163,6 +202,29 @@ app.delete('/categories/:id', (req, res) => {
             return res.status(404).json({ error: 'Category not found' });
         }
         res.status(200).json({ message: 'Category deleted successfully' });
+    });
+});
+
+// حذف طالب
+app.delete('/orders/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+
+    // استعلام SQL لحذف الطالب
+    const sql = 'DELETE FROM orders WHERE id = $1';
+
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting orders:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+
+        // التحقق إذا كان الطالب موجودًا
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'orders not found' });
+        }
+
+        // إرجاع رسالة نجاح
+        res.status(200).json({ message: 'orders deleted successfully' });
     });
 });
 
@@ -215,6 +277,21 @@ app.get('/products/:id', (req, res) => {
         }
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+app.get('/orders/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+    const sql = 'SELECT * FROM orders WHERE id = $1';
+    
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching orders by ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'orders not found' });
         }
         res.status(200).json(result.rows[0]);
     });
