@@ -128,12 +128,22 @@ app.delete('/orders/:id', (req, res) => {
         res.status(200).json({ message: 'Order deleted successfully' });
     });
 });
+const multer = require('multer');
 
- app.post('/orders', (req, res) => {
+app.post('/orders', upload.none(), (req, res) => {
     const { name, location, phonenumber, email, additional_data } = req.body;
 
+    // التحقق من الحقول المطلوبة
     if (!name || !location || !email) {
         return res.status(400).json({ error: 'Name, location, and email are required' });
+    }
+
+    // صيغة JSON في الحقل الإضافي تحتاج إلى تحويل النص إلى JSON إذا كانت مرسلة كـ string
+    let additionalData;
+    try {
+        additionalData = additional_data ? JSON.parse(additional_data) : null;
+    } catch (error) {
+        return res.status(400).json({ error: 'Invalid JSON format in additional_data' });
     }
 
     const sql = `
@@ -141,14 +151,21 @@ app.delete('/orders/:id', (req, res) => {
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
     `;
-    const values = [name, location, phonenumber, email, additional_data];
+    const values = [name, location, phonenumber, email, additionalData];
 
     client.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error inserting order:', err);
             return res.status(500).json({ error: 'Database error', details: err.message });
         }
-        res.status(201).json({ id: result.rows[0].id, name, location, phonenumber, email, additional_data });
+        res.status(201).json({ 
+            id: result.rows[0].id, 
+            name, 
+            location, 
+            phonenumber, 
+            email, 
+            additional_data: additionalData 
+        });
     });
 });
 
