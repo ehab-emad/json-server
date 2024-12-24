@@ -50,7 +50,108 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 /** 
  * 1. إضافة منتج جديد
- */
+ */1735054632821
+ app.get('/orders', (req, res) => {
+    const sql = 'SELECT * FROM orders';
+    client.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching orders:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.status(200).json(results.rows);
+    });
+});
+app.get('/orders/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+    const sql = 'SELECT * FROM orders WHERE id = $1';
+
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching order by ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+app.get('/orders/:id', (req, res) => {
+    const { id } = req.params; // استخراج الـ ID من الرابط
+    const sql = 'SELECT * FROM orders WHERE id = $1';
+
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching order by ID:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+app.put('/orders/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, location, phonenumber, email, additional_data } = req.body;
+
+    const sql = `
+        UPDATE orders
+        SET name = $1, location = $2, phonenumber = $3, email = $4, additional_data = $5
+        WHERE id = $6
+        RETURNING *
+    `;
+    const values = [name, location, phonenumber, email, additional_data, id];
+
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error updating order:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    });
+});
+app.delete('/orders/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM orders WHERE id = $1';
+    client.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting order:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        res.status(200).json({ message: 'Order deleted successfully' });
+    });
+});
+
+ app.post('/orders', (req, res) => {
+    const { name, location, phonenumber, email, additional_data } = req.body;
+
+    if (!name || !location || !email) {
+        return res.status(400).json({ error: 'Name, location, and email are required' });
+    }
+
+    const sql = `
+        INSERT INTO orders (name, location, phonenumber, email, additional_data)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+    `;
+    const values = [name, location, phonenumber, email, additional_data];
+
+    client.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error inserting order:', err);
+            return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        res.status(201).json({ id: result.rows[0].id, name, location, phonenumber, email, additional_data });
+    });
+});
+
 app.post('/products', upload.single('image'), (req, res) => {
     const { title, price, scope, category, fame, num, description } = req.body;
     const image = req.body.image; // استخدام الرابط الكامل للصورة
